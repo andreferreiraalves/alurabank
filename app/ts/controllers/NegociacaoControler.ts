@@ -2,6 +2,7 @@ import { Negociacao, Negociacoes, NegociacaoParcial } from '../models/index';
 import { MensagemView, NegociacoesView } from '../views/index';
 import { domInject, throttle } from '../helpers/decorators/index';
 import { NegociacaoService, HandlerFunction } from '../services/index';
+import { imprime } from '../helpers/index';
 
 export class NegociacaoControler {
 
@@ -39,6 +40,8 @@ export class NegociacaoControler {
         );
 
         this._negociacoes.adiciona(negociacao);
+
+        imprime(negociacao, this._negociacoes);
         this._negociacoesView.templateUpdate(this._negociacoes);
         this._mensagemView.templateUpdate('Negociação adicionada com sucesso');
     }
@@ -48,7 +51,7 @@ export class NegociacaoControler {
     }
 
     @throttle()
-    importaDados() {
+    async importaDados() {
         const isOK: HandlerFunction = (res: Response) => {
             if (res.ok) {
                 return res;
@@ -57,11 +60,56 @@ export class NegociacaoControler {
             }
         };
 
-        this._negociacaoService.obterNegociacoes(isOK)
-            .then(negociacoes => {
-                negociacoes.forEach(negociacao => this._negociacoes.adiciona(negociacao));
-                this._negociacoesView.templateUpdate(this._negociacoes);
-            });
+        // this._negociacaoService
+        // .obterNegociacoes(res => {
+
+        //     if (res.ok) {
+        //         return res;
+        //     } else {
+        //         throw new Error(res.statusText);
+        //     }
+        // })
+        // .then(negociacoesParaImportar => {
+
+        //     const negociacoesJaImportadas = this._negociacoes.paraArray();
+
+        //     negociacoesParaImportar
+        //         .filter(negociacao =>
+        //             !negociacoesJaImportadas.some(jaImportada =>
+        //                 negociacao.ehIgual(jaImportada)))
+        //         .forEach(negociacao =>
+        //             this._negociacoes.adiciona(negociacao));
+
+        //     this._negociacoesView.templateUpdate(this._negociacoes);
+        // })
+        // .catch(err => {
+        //     this._mensagemView.templateUpdate(err.message);
+        // });
+
+        try {
+            const negociacoesParaImportar = await this._negociacaoService
+                .obterNegociacoes(res => {
+
+                    if (res.ok) {
+                        return res;
+                    } else {
+                        throw new Error(res.statusText);
+                    }
+                })
+
+            const negociacoesJaImportadas = this._negociacoes.paraArray();
+
+            negociacoesParaImportar
+                .filter(negociacao =>
+                    !negociacoesJaImportadas.some(jaImportada =>
+                        negociacao.ehIgual(jaImportada)))
+                .forEach(negociacao =>
+                    this._negociacoes.adiciona(negociacao));
+
+            this._negociacoesView.templateUpdate(this._negociacoes);
+        } catch (err) {
+            this._mensagemView.templateUpdate(err.message);
+        }
     }
 }
 

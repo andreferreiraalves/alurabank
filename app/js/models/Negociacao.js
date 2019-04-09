@@ -14,6 +14,18 @@ System.register([], function (exports_1, context_1) {
                 get volume() {
                     return this.quantidade * this.valor;
                 }
+                paraTexto() {
+                    console.log('Impressão');
+                    console.log(`Data: ${this.data}
+        Quantidade: ${this.quantidade}
+        Valor: ${this.valor}
+        Volume: ${this.volume}`);
+                }
+                ehIgual(objeto) {
+                    return this.data.getDate() == objeto.data.getDate() &&
+                        this.data.getMonth() == objeto.data.getMonth() &&
+                        this.data.getFullYear() == objeto.data.getFullYear();
+                }
             };
             exports_1("Negociacao", Negociacao);
         }
